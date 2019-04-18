@@ -1,0 +1,50 @@
+---
+- name: YML Desafiador
+  hosts: all
+  tasks: 
+  - name: STOPAR O NGINX
+    systemd:
+      name: nginx
+      state: stopped #Comentario
+    ignore_errors: True
+
+  - name: Removendo o NGINX 
+    package:
+      name: nginx*
+      state: absent
+
+  - name: Instalar o apache2 - Ubuntu
+    package:
+      name: ['libapache2-mod-php7.0','apache2','php7.0']
+      state: present
+    when: ansible_distribution|lower == "ubuntu"
+
+  - name: Instalar HTTPD - CentOS
+    package:
+      name: ['httpd','php']
+      state: present
+    notify: httpd 
+    when: ansible_distribution|lower == "centos"
+
+  - name: Habilitando Modulo -  Ubuntu
+    apache2_module:
+      name: php7.0
+      state: present
+    notify: apache2
+    when: ansible_distribution|lower == "ubuntu"
+
+  - name: copiando index.php
+    copy:
+      src: index.php
+      dest: /var/www/html/
+
+  handlers:
+  - name: httpd
+    systemd:
+      name: httpd
+      state: restarted
+
+  - name: apache2
+    systemd:
+      name: apache2
+      state: restarted
